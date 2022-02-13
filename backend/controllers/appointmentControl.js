@@ -151,14 +151,26 @@ exports.getBusinessAppointment = async (req, res) => {
         if(req.params.id && req.params.date) {
             const businessid = req.params.id;
             const recordSet = await Appointment.findAll();
+            let availableTime = Array(48).fill(1);
             const results = recordSet.filter((record => {
-                const appointmentDate = record.start.split(":").splice(0,3);
+                const appointmentStart = record.start.split(":").splice(0,3);
                 const requestDate = req.params.date.split(":");
-                return (record.BusinessId == businessid && compareArr(appointmentDate, requestDate));
+                return (record.BusinessId == businessid && compareArr(appointmentStart, requestDate));
             }));
+            results.forEach(result => {
+                const appointmentStart = Number(result.start.split(":")[3]);
+                const appointmentEnd = Number(result.end.split(":")[3]);
+                if(result.allowed) {
+                    console.log(appointmentStart,appointmentEnd);
+                    for(let i = appointmentStart ; i < appointmentEnd ; i ++) {                        
+                        availableTime[i] = 0;
+                    }
+                }
+            });
             res.status(200).json({
                 status: true,
-                response: results
+                response: results,
+                availableTime: availableTime
             })
         } else {
             res.status(400).json({
