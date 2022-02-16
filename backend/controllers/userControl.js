@@ -77,6 +77,21 @@ exports.register = async (req, res) => {
     }
 }
 
+exports.getUserInfo = async (req, res) => {
+    try {
+        const results = await User.findAll();
+        res.status(200).json({
+            status: true,
+            response: results
+        })
+    } catch(e) {
+        res.status(400).json({
+            status: false,
+            errorMessage: 'Something went wrong'
+        })
+    }
+}
+
 checkUserAndGenerateToken = (data, req, res) => {
     jwt.sign({ user: data.username, id: data.id }, secretKey, {expiresIn: '1d'}, (err, token) => {
         if(err) {

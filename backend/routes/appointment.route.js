@@ -12,8 +12,11 @@ module.exports = app => {
   
     router.post('/appointment', appointments.make);
     router.put('/appointment/:id', appointments.edit);
+    router.put('/appointment/allow/:id', appointments.allow);
+    router.put('/appointment/cancel/:id', appointments.cancel);
     router.delete('/appointment/:id', appointments.delete);
-    router.post('/appointment/user/:id/:date', appointments.getUserAppointment);
-    router.post('/appointment/business/:id/:date', appointments.getBusinessAppointment);
+    router.post('/appointment/user/:id/', appointments.getUserAppointment);
+    router.post('/appointment/business/:id', appointments.getBusinessAppointment);
+    router.post('/appointment/business/:id/:date', appointments.getDateBusinessAppointment);
     app.use(router);
 }

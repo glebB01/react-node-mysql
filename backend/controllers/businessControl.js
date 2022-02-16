@@ -6,6 +6,21 @@ var jwt = require('jsonwebtoken');
 
 const secretKey = "KTJ Secret Key";
 
+exports.getall = async (req, res) => {
+    try {
+        const results = await Business.findAll();
+        res.status(200).json({
+            status: true,
+            response: results
+        })
+    } catch(e) {
+        res.status(400).json({
+            status: false,
+            errorMessage: 'Something went wrong'
+        })
+    }
+}
+
 exports.login = async (req, res) => {
     try {
         if(req.body && req.body.businessname && req.body.password) {

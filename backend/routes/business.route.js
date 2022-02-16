@@ -10,6 +10,7 @@ module.exports = app => {
     router.use(bodyParser.json());
     router.use(bodyParser.urlencoded({ extended: false }))
   
+    router.get('/business', businesses.getall);
     router.post('/business/login', businesses.login);
   
     router.post('/business/register', businesses.register);

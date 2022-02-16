@@ -28,7 +28,7 @@ app.use("/", (req, res, next) => {
             next();
         } else {
             jwt.verify(req.headers.token, secretKey, function (err, decoded) {
-                if (decoded && decoded.user) {
+                if (decoded && (decoded.user || decoded.business)) {
                   req.user = decoded;
                   next();
                 } else {

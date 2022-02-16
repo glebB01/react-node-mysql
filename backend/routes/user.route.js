@@ -11,8 +11,8 @@ module.exports = app => {
   router.use(bodyParser.urlencoded({ extended: false }))
 
   router.post('/user/login', users.login);
-
   router.post('/user/register', users.register);
+  router.post('/user', users.getUserInfo);
 
   app.use(router);
 }

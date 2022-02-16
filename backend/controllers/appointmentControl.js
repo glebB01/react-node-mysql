@@ -1,4 +1,3 @@
-const { all } = require('express/lib/application');
 const db = require('../models');
 const Appointment = db.Appointment;
 
@@ -40,6 +39,7 @@ exports.make = async (req, res) => {
 
 exports.edit = async (req, res) => {
     try {
+        console.log(req.body);
         if(req.body && req.body.UserId && req.body.BusinessId && req.body.start && req.body.end) {
             const targetAppointment = await Appointment.findByPk(req.params.id);
             if(targetAppointment === null) {
@@ -70,6 +70,94 @@ exports.edit = async (req, res) => {
                        response: resultAppointment
                    })
                }
+            }
+        } else {
+            res.status(400).json({
+                status: false,
+                errorMessage: 'Input Correct Data'
+            })
+        }
+    } catch(e) {
+        console.log(e);
+        res.status(400).json({
+            status: false,
+            errorMessage: 'Something went wrong'
+        })
+    }
+}
+
+exports.allow = async (req, res) => {
+    try {
+        if(req.params.id) {
+            const targetAppointment = await Appointment.findByPk(req.params.id);
+            if(targetAppointment === null) {
+                res.status(400).json({
+                    status: false,
+                    errorMessage: 'Appointment Not Exist!'
+                })
+            } else {
+                const resultAppointment = await Appointment.update({
+                    allowed: true
+                }, {
+                   where: {
+                       id: req.params.id
+                   }
+               });
+               if(resultAppointment === null) {
+                   res.status(400).json({
+                       status: false,
+                       errorMessage: 'Update failed'
+                   })
+               } else {
+                   res.status(200).json({
+                       status: true,
+                       response: resultAppointment
+                   })
+               }
+            }
+        } else {
+            res.status(400).json({
+                status: false,
+                errorMessage: 'Input Correct Data'
+            })
+        }
+    } catch(e) {
+        console.log(e);
+        res.status(400).json({
+            status: false,
+            errorMessage: 'Something went wrong'
+        })
+    }
+}
+
+exports.cancel = async (req, res) => {
+    try {
+        if(req.params.id) {
+            const targetAppointment = await Appointment.findByPk(req.params.id);
+            if(targetAppointment === null) {
+                res.status(400).json({
+                    status: false,
+                    errorMessage: 'Appointment Not Exist!'
+                })
+            } else {
+                const resultAppointment = await Appointment.update({
+                    allowed: false
+                }, {
+                    where: {
+                        id: req.params.id
+                    }
+                });
+                if(resultAppointment === null) {
+                    res.status(400).json({
+                        status: false,
+                        errorMessage: 'Update failed'
+                    })
+                } else {
+                    res.status(200).json({
+                        status: true,
+                        response: resultAppointment
+                    })
+                }
             }
         } else {
             res.status(400).json({
@@ -119,13 +207,11 @@ exports.delete = async (req, res) => {
 
 exports.getUserAppointment = async (req, res) => {
     try {
-        if(req.params.id && req.params.date) {
+        if(req.params.id) {
             const userid = req.params.id;
             const recordSet = await Appointment.findAll();
             const results = recordSet.filter((record => {
-                const appointmentDate = record.start.split(":").splice(0,3);
-                const requestDate = req.params.date.split(":");
-                return (record.UserId == userid && compareArr(appointmentDate, requestDate));
+                return (record.UserId == userid);
             }));
             res.status(200).json({
                 status: true,
@@ -146,7 +232,7 @@ exports.getUserAppointment = async (req, res) => {
     }
 }
 
-exports.getBusinessAppointment = async (req, res) => {
+exports.getDateBusinessAppointment = async (req, res) => {
     try {
         if(req.params.id && req.params.date) {
             const businessid = req.params.id;
@@ -186,6 +272,35 @@ exports.getBusinessAppointment = async (req, res) => {
         })
     }
 }
+
+exports.getBusinessAppointment = async (req, res) => {
+    try {
+        if(req.params.id) {
+            const businessid = req.params.id;
+            const recordSet = await Appointment.findAll();
+            let availableTime = Array(48).fill(1);
+            const results = recordSet.filter((record => {
+                return (record.BusinessId == businessid);
+            }));
+            res.status(200).json({
+                status: true,
+                response: results
+            })
+        } else {
+            res.status(400).json({
+                status: false,
+                errorMessage: 'Input Correct Data'
+            })
+        }
+    } catch(e) {
+        console.log(e);
+        res.status(400).json({
+            status: false,
+            errorMessage: 'Something went wrong'
+        })
+    }
+}
+
 
 const compareArr = (arr1, arr2) => {
     if(arr1.length != arr2.length) return 0;
