@@ -31,10 +31,15 @@ export default function(state = initialState, action) {
             return {...state, userSchedule: action.payload.data}
         }
         case UPDATE_APPOINTMENT: {
-            return {...state, userSchedule: state.userSchedule.map(schedule => (schedule.id == action.payload.id ? {...schedule, ...action.payload.data} : schedule))}
+            return {...state, 
+                    userSchedule: state.userSchedule.map(schedule => (schedule.id == action.payload.id ? {...schedule, ...action.payload.data, allowed: false} : schedule)),
+                    availableTime: action.payload.availableTime
+                }
         }
         case DELETE_APPOINTMENT: {
-            return {...state, userSchedule: state.userSchedule.filter(schedule => (schedule.id != action.payload.id))};
+            return {...state, 
+                    userSchedule: state.userSchedule.filter(schedule => (schedule.id != action.payload.id)),
+                    availableTime: action.payload.availableTime};
         }
         case GET_BUSINESS_APPOINTMENT: {
             return {...state, businessSchedule: action.payload.data}

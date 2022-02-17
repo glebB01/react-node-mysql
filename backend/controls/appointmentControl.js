@@ -3,12 +3,15 @@ const Appointment = db.Appointment;
 
 exports.make = async (req, res) => {    
     try {
-        if(req.body && req.body.UserId && req.body.BusinessId && req.body.start && req.body.end) {
+        if(req.body && 
+            req.body.UserId && 
+            req.body.BusinessId && 
+            req.body.start &&
+            req.body.end && 
+            req.body.latitude && 
+            req.body.longitude) {
             const newAppointment = await Appointment.create({
-                 UserId: req.body.UserId,
-                 BusinessId: req.body.BusinessId,
-                 start: req.body.start,
-                 end: req.body.end,
+                 ...req.body,
                  allowed: false
             });
             if(newAppointment === null) {
@@ -40,7 +43,13 @@ exports.make = async (req, res) => {
 exports.edit = async (req, res) => {
     try {
         console.log(req.body);
-        if(req.body && req.body.UserId && req.body.BusinessId && req.body.start && req.body.end) {
+        if(req.body && 
+            req.body.UserId && 
+            req.body.BusinessId && 
+            req.body.start &&
+            req.body.end && 
+            req.body.latitude && 
+            req.body.longitude) {
             const targetAppointment = await Appointment.findByPk(req.params.id);
             if(targetAppointment === null) {
                 res.status(400).json({
@@ -49,10 +58,7 @@ exports.edit = async (req, res) => {
                 })
             } else {
                 const resultAppointment = await Appointment.update({
-                    UserId: req.body.UserId,
-                    BusinessId: req.body.BusinessId,
-                    start: req.body.start,
-                    end: req.body.end,
+                    ...req.body,
                     allowed: false
                 }, {
                    where: {
@@ -65,10 +71,12 @@ exports.edit = async (req, res) => {
                        errorMessage: 'Update failed'
                    })
                } else {
-                   res.status(200).json({
-                       status: true,
-                       response: resultAppointment
-                   })
+                    let availableTime = await calcAvailableTime(req.body.BusinessId, req.body.start.split(':').slice(0, 3).join(':'));
+                    res.status(200).json({
+                        status: true,
+                        response: resultAppointment,
+                        availableTime: availableTime
+                    })
                }
             }
         } else {
@@ -175,6 +183,7 @@ exports.cancel = async (req, res) => {
 }
 
 exports.delete = async (req, res) => {
+    console.log(req.params.id);
     try {
         if(req.params.id) {
             const targetAppointment = await Appointment.findByPk(req.params.id);
@@ -184,10 +193,13 @@ exports.delete = async (req, res) => {
                     errorMessage: 'Appointment Not Exist!'
                 })
             } else {
+                const deletedData = targetAppointment;
                 await targetAppointment.destroy();
+                let availableTime = await calcAvailableTime(deletedData.BusinessId, deletedData.start.split(':').slice(0, 3).join(':'));
                 res.status(200).json({
-                    status: false,
-                    errorMessage: 'Delete Successfully'
+                    status: true,
+                    errorMessage: 'Delete Successfully',
+                    availableTime: availableTime
                 })
             }
         } else {
@@ -197,7 +209,6 @@ exports.delete = async (req, res) => {
             })
         }
     } catch(e) {
-        console.log(e);
         res.status(400).json({
             status: false,
             errorMessage: 'Something went wrong'
@@ -236,26 +247,9 @@ exports.getDateBusinessAppointment = async (req, res) => {
     try {
         if(req.params.id && req.params.date) {
             const businessid = req.params.id;
-            const recordSet = await Appointment.findAll();
-            let availableTime = Array(48).fill(1);
-            const results = recordSet.filter((record => {
-                const appointmentStart = record.start.split(":").splice(0,3);
-                const requestDate = req.params.date.split(":");
-                return (record.BusinessId == businessid && compareArr(appointmentStart, requestDate));
-            }));
-            results.forEach(result => {
-                const appointmentStart = Number(result.start.split(":")[3]);
-                const appointmentEnd = Number(result.end.split(":")[3]);
-                if(result.allowed) {
-                    console.log(appointmentStart,appointmentEnd);
-                    for(let i = appointmentStart ; i < appointmentEnd ; i ++) {                        
-                        availableTime[i] = 0;
-                    }
-                }
-            });
+            let availableTime = await calcAvailableTime(businessid, req.params.date);
             res.status(200).json({
                 status: true,
-                response: results,
                 availableTime: availableTime
             })
         } else {
@@ -273,12 +267,32 @@ exports.getDateBusinessAppointment = async (req, res) => {
     }
 }
 
+const calcAvailableTime = async (businessid, date) => {
+    const recordSet = await Appointment.findAll();
+    let availableTime = Array(48).fill(1);
+    const results = recordSet.filter((record => {
+        const appointmentStart = record.start.split(":").splice(0,3);
+        const requestDate = date.split(":");
+        return (record.BusinessId == businessid && compareArr(appointmentStart, requestDate));
+    }));
+    results.forEach(result => {
+        const appointmentStart = Number(result.start.split(":")[3]);
+        const appointmentEnd = Number(result.end.split(":")[3]);
+        if(result.allowed) {
+            console.log(appointmentStart,appointmentEnd);
+            for(let i = appointmentStart ; i < appointmentEnd ; i ++) {                        
+                availableTime[i] = 0;
+            }
+        }
+    });
+    return availableTime;
+}
+
 exports.getBusinessAppointment = async (req, res) => {
     try {
         if(req.params.id) {
             const businessid = req.params.id;
             const recordSet = await Appointment.findAll();
-            let availableTime = Array(48).fill(1);
             const results = recordSet.filter((record => {
                 return (record.BusinessId == businessid);
             }));

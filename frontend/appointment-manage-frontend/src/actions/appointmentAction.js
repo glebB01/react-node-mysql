@@ -1,3 +1,4 @@
+import { lineArc } from '@turf/turf';
 import axios from 'axios';
 import { 
     GET_AVAILABLE_TIME, 
@@ -19,6 +20,7 @@ export const getAvailableTime = (businessId, date) => dispatch => {
         }
     })
     .then(res => {
+        console.log(res.data.availableTime);
         dispatch({
             type: GET_AVAILABLE_TIME,
             payload: {availableTime: res.data.availableTime}
@@ -26,14 +28,24 @@ export const getAvailableTime = (businessId, date) => dispatch => {
     })
 }
 
-export const makeAppointment = (businessId, start, end) => dispatch => {
+export const makeAppointment = (businessId, start, end, latitude, longitude) => dispatch => {
     const token = localStorage.getItem('token');
     const userid = localStorage.getItem('user_id');
+    console.log({
+        UserId: userid,
+        BusinessId: businessId,
+        start: start,
+        end: end,
+        latitude: latitude,
+        longitude: longitude
+    });
     axios.post(`http://127.0.0.1:5000/appointment`,{
         UserId: userid,
         BusinessId: businessId,
         start: start,
-        end: end
+        end: end,
+        latitude: latitude,
+        longitude: longitude
     },
     {
         headers: {
@@ -65,14 +77,16 @@ export const getUserAppointment = () => dispatch => {
     });
 }
 
-export const editAppointment = (appointId, businessId, start, end) => dispatch => {
+export const editAppointment = (appointId, businessId, start, end, latitude, longitude) => dispatch => {
     const token = localStorage.getItem('token');
     const userid = localStorage.getItem('user_id');
     axios.put(`http://127.0.0.1:5000/appointment/${appointId}`,{
         UserId: userid,
         BusinessId: businessId,
         start: start,
-        end: end
+        end: end,
+        latitude: latitude,
+        longitude: longitude
     },
     {
         headers: {
@@ -89,8 +103,11 @@ export const editAppointment = (appointId, businessId, start, end) => dispatch =
                     UserId: userid,
                     BusinessId: businessId,
                     start: start,
-                    end: end
+                    end: end,
+                    latitude: latitude,
+                    longitude: longitude
                 },
+                availableTime: res.data.availableTime,
                 id: appointId
             }
         })
@@ -109,7 +126,10 @@ export const deleteAppointment = (appointId) => dispatch => {
         if(!res.data.status) return ;
         dispatch({
             type: DELETE_APPOINTMENT,
-            payload: {id: appointId}
+            payload: {
+                id: appointId,
+                availableTime: res.data.availableTime
+            }
         })
     })
 }

@@ -6,13 +6,17 @@ import BusinessSelect from '../components/BusinessSelect';
 import { businessGet } from '../actions/businessAction';
 import { getAvailableTime, getUserAppointment, makeAppointment } from '../actions/appointmentAction';
 import UserAppointment from '../components/UserAppointment';
+import AppointmentMap from '../components/AppointmentMap';
 
 const UserDashboard = (props) => {
     const [businessName, setBusinessName] = useState('');
     const [businessId, setBusinessId] = useState(0);
     const [date, setDate] = useState('');
     const [invalidTimes, setInvalidTimes] = useState([]);
-    const [startTime, setStartTime] = useState('');
+    const [location, setLocation] = useState({
+        longitude: -90.95534916605851,
+        latitude: 55.658012906351075,
+    });
     
     const prevAvail = usePrevious(props.availableTime);
     const prevInvalid = usePrevious(invalidTimes);
@@ -28,7 +32,6 @@ const UserDashboard = (props) => {
     useEffect(() => {
         getBusinessArray();
     }, [])
-
     useEffect(() => {
         const sDate = new Date(date);
         if(prevAvail != props.availableTime && isMounted) {
@@ -40,16 +43,10 @@ const UserDashboard = (props) => {
                     newInvalid = [...newInvalid, {start, end}]
                 }
             }
-            // const newInvalid = [...props.availableTime].map((val, i) => {
-            //     const start = String(`${sDate.getFullYear()}-${String(Math.floor(sDate.getMonth()-1+2)).padStart(2,'0')}-${String(Math.floor(sDate.getDate())).padStart(2,'0')}T${String(Math.floor(i / 2)).padStart(2,'0')}:${String(Math.floor((i % 2) * 30)).padStart(2,'0')}`);
-            //     const end = String(`${sDate.getFullYear()}-${String(Math.floor(sDate.getMonth()-1+2)).padStart(2,'0')}-${String(Math.floor(sDate.getDate())).padStart(2,'0')}T${String(Math.floor((i + 1) / 2)).padStart(2,'0')}:${String(Math.floor(((i + 1) % 2) * 30)).padStart(2,'0')}`);
-            //     return {start, end};
-            // });
             const temp_state = [...newInvalid];
             if(temp_state != prevInvalid && isMounted)
                 setInvalidTimes( temp_state );
         }
-        console.log('asdf');
         return() => {isMounted = false;}
     }, [props.availableTime, invalidTimes])
 
@@ -77,6 +74,14 @@ const UserDashboard = (props) => {
         availtTime(businessId, selectedDate);
     }
 
+    const validate = (start, end) => {
+        for(let i = start ; i <= end ; i ++) {
+            if(props.availableTime[i] === 0)
+                return 0;
+        }
+        return 1;
+    }
+
     const addAppointment = (e) => {
         e.preventDefault();
         const sDate = new Date(date);
@@ -84,30 +89,48 @@ const UserDashboard = (props) => {
         const endTime = e.target.elements.end.value.split(':');
         const start = 2 * startTime[0] + Math.floor(startTime[1] / 30);
         const end = 2 * endTime[0] + Math.floor(endTime[1] / 30);
-        if(startTime && endTime) props.makeAppointment(businessId, makeDate(sDate) + `:${start}`, makeDate(sDate) + `:${end}`);
+        const latitude = location.latitude;
+        const longitude = location.longitude;
+        if(validate(start, end)){
+             if(startTime && endTime) props.makeAppointment(businessId, makeDate(sDate) + `:${start}`, makeDate(sDate) + `:${end}`, latitude, longitude);
+        } else {
+            alert('Invalid Time!');
+        }
+    }
+
+    const clickPosition = (locationData) => {
+        setLocation(locationData);
     }
 
     return (
         <div>
-            <Calendar dateSelected={dateSelected} invalidTime = {invalidTimes}/>
-            <div className='row mt-3'>
-                <div className='col-md-3'>
-                    <BusinessSelect 
-                        businessArr={props.businessArr}
-                        change={(e) => update(e)}
-                        val = {businessName}
-                    />
+            <div className='row mt-5'>
+                <div className='col' style={{marginTop: '50px'}}>
+                    <AppointmentMap clickPosition = {(locationData) => {clickPosition(locationData)}} location = { location }/>
+                    <div className='mt-3'>
+                        <form onSubmit={(e) => addAppointment(e)} className='form' style={{width: '70%'}}>
+                            <div>
+                                <BusinessSelect 
+                                    businessArr={props.businessArr}
+                                    change={(e) => update(e)}
+                                    val = {businessName}
+                                />
+                            </div>
+                            <input type='time' className='form-control mr-5' placeholder='Start time' name='start'/>
+                            <input type='time' className='form-control mr-5' placeholder='End time' name='end'/>
+                            <button type="submit" className='btn btn-primary mr-5' style={{width:'100%'}}>Send Appointment</button>
+                        </form>
+                    </div>
                 </div>
-                <form onSubmit={(e) => addAppointment(e)} className='form-inline ml-3' style={{width: '70%'}}>
-                    <input type='time' className='form-control mr-5' placeholder='Start time' name='start'/>
-                    <input type='time' className='form-control mr-5' placeholder='End time' name='end'/>
-                    <button type="submit" className='btn btn-primary mr-5'>Send Appointment</button>
-                </form>
+                <div className='col'>
+                    <Calendar dateSelected={dateSelected} invalidTime = {invalidTimes}/>
+                </div>
             </div>
+            
             {<ul className='mt-5' key={props.userSchedule.length}>
                 <h3 className='text-center'>User Appointments</h3>
                 {props.userSchedule.map((schedule, idx) => (
-                    <UserAppointment appointment={schedule} key={idx} />
+                    <UserAppointment appointment={schedule} key={idx} location={location}/>
                 ))}
             </ul>}
         </div>
@@ -125,7 +148,7 @@ function mapDispatchToProps(dispatch) {
         businessGet: () => dispatch(businessGet()),
         getAvailableTime: (businessId, date) => dispatch(getAvailableTime(businessId, date)),
         getUserAppointment: () => dispatch(getUserAppointment()),
-        makeAppointment: (businessId, start, end) => dispatch(makeAppointment(businessId, start, end)),
+        makeAppointment: (businessId, start, end, latitude, longitude) => dispatch(makeAppointment(businessId, start, end, latitude, longitude)),
     };
 }
 

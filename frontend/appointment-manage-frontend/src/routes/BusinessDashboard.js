@@ -3,6 +3,7 @@ import WeekCalendar from '../components/WeekCalendar';
 import { connect } from 'react-redux';
 import { getBusinessAppointment, allowAppointment, cancelAppointment } from '../actions/appointmentAction';
 import { getUserData } from '../actions/userAction';
+import AppointmentMap from '../components/AppointmentMap';
 
 class BusinessDashboard extends Component {
     constructor(props) {
@@ -23,7 +24,13 @@ class BusinessDashboard extends Component {
     }
 
     eventClick(eventData){
-        this.setState(eventData.event);
+        this.setState({
+            ...eventData.event,
+            location: {
+                latitude: this.props.businessSchedule[eventData.event.id].latitude,
+                longitude: this.props.businessSchedule[eventData.event.id].longitude
+            }
+        });
     }
 
     allowAppointment() {
@@ -38,12 +45,19 @@ class BusinessDashboard extends Component {
 
     render() {
         return (
-            <div style={{marginTop: '50px', height: '600px'}}>
-                <WeekCalendar 
-                    appointments = {this.props.businessSchedule} 
-                    users = {this.props.users}
-                    eventClick = {(eventData) => this.eventClick(eventData)}
-                />
+            <div style={{marginTop: '50px'}}>
+                <div className='row'>
+                    <div className='col mt-3' style={{height: "600px"}}>
+                        <WeekCalendar 
+                            appointments = {this.props.businessSchedule} 
+                            users = {this.props.users}
+                            eventClick = {(eventData) => this.eventClick(eventData)}
+                        />
+                    </div>
+                    <div className='col mt-5'>
+                        <AppointmentMap clickPosition = {() => {}} location={this.state.location ? this.state.location : {longitude: -90, latitude: 55}}/>
+                    </div>
+                </div>
                 <div className='row mt-5'>
                     <div className='col'>
                         {

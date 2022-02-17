@@ -3,12 +3,8 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 
 module.exports = app => {
-    const appointments = require('../controllers/appointmentControl');
+    const appointments = require('../controls/appointmentControl');
     var router = express.Router();
-  
-    router.use(cors());
-    router.use(bodyParser.json());
-    router.use(bodyParser.urlencoded({ extended: false }))
   
     router.post('/appointment', appointments.make);
     router.put('/appointment/:id', appointments.edit);

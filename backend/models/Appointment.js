@@ -11,6 +11,12 @@ module.exports = (sequelize, Sequelize) => {
         },
         allowed: {
             type: Sequelize.BOOLEAN
+        },
+        latitude: {
+            type: Sequelize.DOUBLE
+        },
+        longitude: {
+            type: Sequelize.DOUBLE
         }
     });
     return Appointment;

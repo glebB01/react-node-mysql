@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import BusinessSelect from './BusinessSelect';
 import { businessGet } from '../actions/businessAction';
-import { editAppointment, deleteAppointment } from '../actions/appointmentAction'
+import { editAppointment, deleteAppointment, getAvailableTime } from '../actions/appointmentAction'
 
 class UserAppointment extends Component {
     _isMounted = false;
@@ -34,6 +34,7 @@ class UserAppointment extends Component {
     delete(e) {
         e.preventDefault();
         this.props.deleteAppointment(this.props.appointment.id);
+        //this.props.getAvailableTime(this.state.businessId, this.state.date.split('-').join(':'));
     }
 
     makeDate(time)  {
@@ -48,12 +49,15 @@ class UserAppointment extends Component {
         const appointId = this.props.appointment.id;
         const start = this.makeDate(this.state.startTime);
         const end = this.makeDate(this.state.endTime);
-        this.props.editAppointment(appointId, businessId, start, end);
+        const latitude = this.state.latitude;
+        const longitude = this.state.longitude;
+        this.props.editAppointment(appointId, businessId, start, end, latitude, longitude);
+        //this.props.getAvailableTime(businessId, this.state.date.split('-').join(':'));
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         this._isMounted = true;
-        await this.props.businessGet();
+        console.log(this.props.businessArr);
         if(this._isMounted) {
             this.setState({
                 businessId: this.props.businessArr[this.props.businessArr.findIndex((business => business.id == this.props.appointment.BusinessId))].id,
@@ -61,6 +65,8 @@ class UserAppointment extends Component {
                 date: this.props.appointment.start.split(':').slice(0, 3).map(num => String(num).padStart(2,'0')).join('-'),
                 startTime: `${String(Math.floor(this.props.appointment.start.split(':')[3] / 2)).padStart(2,'0')}:${String(this.props.appointment.start.split(':')[3] % 2 * 30).padStart(2,'0')}`,
                 endTime: `${String(Math.floor(this.props.appointment.end.split(':')[3] / 2)).padStart(2,'0')}:${String(this.props.appointment.end.split(':')[3] % 2 * 30).padStart(2,'0')}`,
+                latitude: this.props.location.latitude,
+                longitude: this.props.location.longitude
             });
         }
     }
@@ -117,7 +123,8 @@ UserAppointment.propTypes = {
     businessArr: PropTypes.array.isRequired,
     businessGet: PropTypes.func.isRequired,
     editAppointment: PropTypes.func.isRequired,
-    deleteAppointment: PropTypes.func.isRequired
+    deleteAppointment: PropTypes.func.isRequired,
+    getAvailableTime: PropTypes.func.isRequired
 }
 
 const mapStateToProps = state => ({
@@ -125,4 +132,4 @@ const mapStateToProps = state => ({
 })
 
 export default connect(mapStateToProps, 
-    { businessGet, editAppointment, deleteAppointment })(UserAppointment)
+    { businessGet, editAppointment, deleteAppointment, getAvailableTime })(UserAppointment)

@@ -3,7 +3,6 @@ import usePrevious from '../functions/usePrevious';
 import React from 'react';
 
 const WeekCalendar = (props) => {
-
     const [myEvents, setEvents] = React.useState([]);
     const prevData = usePrevious(props.appointments);
     React.useEffect(() => {

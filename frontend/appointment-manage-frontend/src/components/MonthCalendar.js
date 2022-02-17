@@ -17,29 +17,8 @@ function Calendar(props) {
     }, []);
 
     React.useEffect(() => {
-        // getJson('https://trial.mobiscroll.com/events/?vers=5', (events) => {
-        //     console.log(events);
-        //     setEvents(events);
-        // }, 'jsonp');
         setInvalids(props.invalidTime);
     });
-  
-    // const myInvalid = React.useMemo(() => {
-    //     return [{
-    //         start: '2022-02-15T08:00',
-    //         end: '2022-02-15T11:00'
-    //     }, {
-    //         start: '2022-02-15T15:00',
-    //         end: '2022-02-14T17:00'
-    //     }, {
-    //         start: '2022-02-15T19:00',
-    //         end: '2022-02-14T20:00'
-    //     },
-    //     {
-    //         start: '2022-02-15T19:00',
-    //         end: '2022-02-15T20:00'
-    //     }];
-    // }, []);
 
     const myInvalid = React.useMemo(() => {
         return props.invalidTime;
@@ -57,7 +36,7 @@ function Calendar(props) {
                 showWeekNumbers={false}
                 showOuterDays={false}
                 controls={['calendar', 'timegrid']}
-                min="2022-02-15T00:00"
+                min="2022-02-17T00:00"
                 max="2022-08-14T00:00"
                 minTime="00:00"
                 maxTime="23:59"
